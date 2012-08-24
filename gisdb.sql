@@ -8,7 +8,7 @@
 -- quit;
 --
 
-CREATE TABLE /*$wgDBprefix*/gis (
+CREATE TABLE gis (
 	gis_page int(8) unsigned NOT NULL,
 	gis_latitude_min real NOT NULL,
 	gis_latitude_max real NOT NULL,
