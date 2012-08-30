@@ -76,7 +76,6 @@ class neighbors {
 				     // FIXME: Notice: Undefined index:  arg:type in extensions\gis\neighbors.php on line 81
 				     $this->attr['arg:type'] );
 		$all = array();
-		$all_pos = array(); /* temporary store reqd due to sort */
 
 		while ( ( $x = $g->fetch_position() ) ) {
 			$id = $x->gis_page;
@@ -88,36 +87,74 @@ class neighbors {
 				# ignore those points that are within the
 				# bounding rectangle, but not within the radius
 			} else {
-				$all[$id] = $gc->distance;
-				$all_pos[$id] = array(
-					'lat' => $lat,
-					'lon' => $lon,
-					'name' => $x->page_title,
-					'type' => $x->gis_type,
-					'octant' => $gc->octant(),
-					'heading' => $gc->heading);
+			    array_push($all, $id);
+                # just collect the id's of the articles
 			}
 		}
-
-		/* Sort by distance */
-		asort($all, SORT_NUMERIC);
-		reset($all);
-
-		/* Generate output */
-		$out = "''List of ". count($all)
-		      . " locations within ".$this->d." km of ";
-		if ($this->title != "") {
-			$out .= $this->title . ", ";
-		}
-		$out .= "coordinates "
-		       . $this->p->make_position($lat0,$lon0)
-		       . "''<br /><hr />\r\n";
-
-		$table="";
-		while (list($id, $d) = each($all)) {
-			$table .= $this->show_location($id, $d, $all_pos[$id]);
-		}
-		return "$out\n<table class=\"gisneighbourtable\">$table</table>\n";
+        
+        # Group all articles by categories
+        
+        $categories = array(); # key is a category id, value is a list of titles
+        $nocategory = array(); # titles witout category
+        foreach($all as $id) {
+            $title = Title::newFromID($id);
+            if (is_null($title)) {
+                error_log("Error loading article with id $id");
+            }  else {
+                $ctgs = $title->getParentCategories(); # get list of categories to which our title belongs
+                foreach($ctgs as $ca => $ignore) {
+                    $categ = Category::newFromName($ca);
+                    $catid = $categ->getID();
+                    if (!$catid) {
+                        array_push($nocategory, "[[$title]]");
+                    } else {
+                        if (array_key_exists($catid, $categories)) { # push title to category if there is some
+                            array_push($categories[$catid], $title);
+                        } else {
+                            $categories[$catid] = array($title);
+                        }
+                    }
+                } 
+            }
+        }
+        # remove duplicates from non categorized titles and sort 
+        $nocategory = array_unique($nocategory);
+        asort($nocategory, SORT_STRING);
+        reset($nocategory);
+        
+        # sort titles and remove duplicates from categories
+        foreach($categories as $cat => $titles) {
+            $categories[$cat] = array_unique($titles);
+            asort($categories[$cat]);
+        }
+        
+        # sort by categories 
+        ksort($categories);
+        
+        # Generate output
+        
+        $catdivs = array(); # must be placed into <dl> tag
+        foreach($categories as $catid => $titles) {
+            $cat = Category::newFromID($catid);
+            $cn = $cat->getName();
+            $catname = "===$cn===";
+            $titledivs = array();      # list of formated titiles
+            foreach($titles as $title) {
+                $nm = $title->getEscapedText();
+                array_push($titledivs, "[[$nm]]");
+            }
+            asort($titledivs, SORT_STRING);
+            reset($titledivs);
+            $titlevals = implode("\n\n", $titledivs);
+            if (empty($cn)) {
+                array_push($catdivs, "$titlevals");
+            } else {
+                array_push($catdivs, "$catname\n\n$titlevals");
+            } 
+        }
+        $out = implode("\n\n", $nocategory);
+        $out .= implode("\n\n", $catdivs);
+        return $out;
 	}
 
 	function show_location( $id, $d, $pos )
