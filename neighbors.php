@@ -104,14 +104,14 @@ class neighbors {
                 $ctgs = $title->getParentCategories(); # get list of categories to which our title belongs
                 foreach($ctgs as $ca => $ignore) {
                     $categ = Category::newFromName($ca);
-                    $catid = $categ->getID();
-                    if (!$catid) {
+                    $catname = $categ->getName();
+                    if (!$catname) {
                         array_push($nocategory, "[[$title]]");
                     } else {
-                        if (array_key_exists($catid, $categories)) { # push title to category if there is some
-                            array_push($categories[$catid], $title);
+                        if (array_key_exists($catname, $categories)) { # push title to category if there is some
+                            array_push($categories[$catname], $title);
                         } else {
-                            $categories[$catid] = array($title);
+                            $categories[$catname] = array($title);
                         }
                     }
                 } 
@@ -134,26 +134,28 @@ class neighbors {
         # Generate output
         
         $catdivs = array(); # must be placed into <dl> tag
-        foreach($categories as $catid => $titles) {
-            $cat = Category::newFromID($catid);
-            $cn = $cat->getName();
-            $catname = "===$cn===";
+        foreach($categories as $catname => $titles) {
+            $cat = Category::newFromName($catname);
+            $cn = $cat->getTitle()->getText();
+            $cn = str_replace(":", ": ", $cn);
+            $cn = "===$cn===";
             $titledivs = array();      # list of formated titiles
             foreach($titles as $title) {
                 $nm = $title->getEscapedText();
-                array_push($titledivs, "[[$nm]]");
+                array_push($titledivs, "* [[$nm]]");
             }
             asort($titledivs, SORT_STRING);
             reset($titledivs);
             $titlevals = implode("\n\n", $titledivs);
-            if (empty($cn)) {
+            if (!$cat) {
                 array_push($catdivs, "$titlevals");
             } else {
-                array_push($catdivs, "$catname\n\n$titlevals");
+                array_push($catdivs, "$cn\n\n$titlevals");
             } 
         }
         $out = implode("\n\n", $nocategory);
         $out .= implode("\n\n", $catdivs);
+        $out .= "__NOTOC__\n";
         return $out;
 	}
 
