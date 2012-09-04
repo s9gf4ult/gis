@@ -91,6 +91,9 @@ class neighbors {
                 # just collect the id's of the articles
 			}
 		}
+        if (count($all) == 0) {
+            return "=== По близости нет объектов ===";
+        }
         
         # Group all articles by categories
         

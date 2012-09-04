@@ -48,28 +48,37 @@ class SpecialGeo extends SpecialPage {
 		global $wgOut, $wgRequest, $wgCookiePrefix;
 		$params = $wgRequest->getValues();
 
-		$wgOut->addHTML( '<form><select name="subaction"><option>Map sources</option>
-<option value="near" ' . ( $params['subaction'] == 'near' ? ' selected' : '' )  .'>Nearby places</option>
-</select>' );
-# <option value="maparea">Not yet sure what this is</option></select>' );
-		if ( $params['subaction'] == 'near' ) {
-			$wgOut->addHTML( '<select name="dist">' );
-			if ( isset( $params['dist'] ) ) {
-				$wgOut->addHTML( "<option value=\"{$params['dist']}\">{$params['dist']} km</option>" );
-			}
-			$distances = array(1000,100,10,1);
-			foreach ( $distances as $d ) {
-				$wgOut->addHTML( "<option value=\"{$d}\">{$d} km</option>" );
-			}
-			$wgOut->addHTML( '</select>' );
-			unset( $params['dist'] );
+		$wgOut->addHTML( '<form>');
+		$wgOut->addHTML( '<select name="dist">' );
+        $distances = array("0.3" => "метров", 
+                           "0.5" => "метров",
+                           "1" => "километр",
+                           "1.5" => "километра");
+		if ( isset( $params['dist'] ) && (! array_key_exists($params['dist'], $distances))) {
+            if ($params['dist'] < 1) {
+                $wgOut->addHTML( sprintf("<option selected value=\"{$params['dist']}\">%d метров</option>", ($params['dist'] * 1000)));
+            } else {
+                $wgOut->addHTML( "<option selected value=\"{$params['dist']}\">{$params['dist']} километров</option>" );
+            }
+            
 		}
+		foreach ( $distances as $d => $dname) {
+		    $selected = ($d == $params['dist']) ? "selected" : "";
+		    if ($d < 1) {
+		        $wgOut->addHTML( sprintf("<option $selected value=\"{$d}\">%d $dname</option>", ($d * 1000)));
+		    } else {
+		      	$wgOut->addHTML( "<option $selected value=\"{$d}\">{$d} $dname</option>" );
+            }
+		}
+		$wgOut->addHTML( '</select>' );
+		unset( $params['dist'] );
 		unset( $params['subaction'] );
 		unset( $params[$wgCookiePrefix.'_session'] );
 
 		foreach ( $params as $key => $val ) {
-			$wgOut->addHTML( "<input type=\"hidden\" name=\"$key\" value=\"$val\">\n" );
+			$wgOut->addHTML( "<input type=\"hidden\" name=\"$key\" value=\"$val\"></input>\n" );
 		}
+        $wgOut->addHTML("<input type=\"hidden\" name=\"subaction\" value=\"near\"></input>");
 		$wgOut->addHTML( "<input type=\"submit\" /></form>\n" );
 
 		if ( $wgRequest->getVal( 'subaction' ) == 'near' ) {
@@ -78,10 +87,7 @@ class SpecialGeo extends SpecialPage {
 			$bsl = new neighbors( $dist );
 			$bsl->show();
 		} elseif ( $wgRequest->getVal( 'subaction' ) == 'maparea' ) {
-			require_once('maparea.php');
-			$action = $wgRequest->getVal( 'action' );
-			$bsl = new maparea();
-			$bsl->show( $action );
+		    error_log("using unsupported subaction=\"maparea\", this parameter must always be \"near\"");
 		} else {
 			$bsl = new map_sources();
 			$bsl->show();
