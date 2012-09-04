@@ -91,10 +91,34 @@ class neighbors {
                 # just collect the id's of the articles
 			}
 		}
+
+        # Delete ignoring articles            
+            
+        global $wgRequest;
+        $ignore = $wgRequest->getVal("ignore");
+        if (! empty($ignore)) {
+            foreach($all as $delid => $articleid) {
+                $title = Title::newFromID($articleid);
+                if (empty($title)) {
+                    error_log("Can not create title from id $articleid");
+                } else {
+                    if ($title->getBaseText() == $ignore) {
+                        unset($all[$delid]);
+                    }
+                }
+            }
+        }
+        
         if (count($all) == 0) {
             return "=== По близости нет объектов ===";
         }
         
+        if (! empty($ignore)) {
+            $out = "=== Объекты возле: $ignore ===\n";
+        } else {
+            $out = "";
+        }
+
         # Group all articles by categories
         
         $categories = array(); # key is a category id, value is a list of titles
@@ -156,7 +180,7 @@ class neighbors {
                 array_push($catdivs, "$cn\n\n$titlevals");
             } 
         }
-        $out = implode("\n\n", $nocategory);
+        $out .= implode("\n\n", $nocategory);
         $out .= implode("\n\n", $catdivs);
         $out .= "__NOTOC__\n";
         return $out;
