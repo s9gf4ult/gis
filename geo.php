@@ -85,7 +85,8 @@ function articleSaveGeo ( $article, $user, $text )
 	$tag = 'geo';
 	$gis_content = array();
 // !JF1
-	$text = Parser::extractTagsAndParams( array( $tag ), $text, $gis_content );
+    $parser = new Parser();
+	$text = $parser->extractTagsAndParams( array( $tag ), $text, $gis_content );
 	foreach( $gis_content as $marker => $tagresult ) {
 		$tagname = $tagresult[0];
 		$content = $tagresult[1];
