@@ -129,34 +129,6 @@ function articleDeleteGeo ( $article )
  *
  *  Return markup, but also a pointer to Map sources
  */
-function parseGeo ( $text, $params, &$parser ) {
-	global $wgUser;
-
-	$geo = new GeoParam( $text );
-
-	if (($e = $geo->get_error()) != "") {
-		return "(".$e.")";
-	}
-
-	# support Internet Geo headers http://geotags.com/geo/geotags2.html
-	global $wgOut;
-	$wgOut->addMeta( "geo.position", $geo->latdeg.";".$geo->londeg );
-
-	if ( !isset( $geo->title ) || $geo->title == "") {
-		$geo->title = $parser->getTitle()->getDBkey();
-	}
-	$geo->title = str_replace(' ', '_', $geo->title );
-	if ($geo->title != "" && $geo->title != " ") {
-		$wgOut->addMeta( "geo.placename", $geo->title );
-	}
-	$attr = $geo->get_attr();
-	if ( isset( $attr['region'] ) && ($r = $attr['region'])) {
-		$wgOut->addMeta( "geo.region", $r);
-	}
-
-	$skin = $wgUser->getSkin();
-
-	// !JF1 Replace Special: by NS call.
-	return Linker::link( SpecialPage::getTitleFor( 'Geo' ), $geo->get_markup(), $geo->get_param_array() );
-
+function parseGeo ( $text, $params, $parser, $frame ) {
+    return ""; # Just replace geotags with empty string 
 }
