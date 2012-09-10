@@ -53,7 +53,9 @@ class SpecialGeo extends SpecialPage {
         $distances = array("0.3" => "метров", 
                            "0.5" => "метров",
                            "1" => "километр",
-                           "1.5" => "километра");
+                           "1.5" => "километра",
+                           "2" => "километра", 
+                           "5" => "километров");
 		if ( isset( $params['dist'] ) && (! array_key_exists($params['dist'], $distances))) {
             if ($params['dist'] < 1) {
                 $wgOut->addHTML( sprintf("<option selected value=\"{$params['dist']}\">%d метров</option>", ($params['dist'] * 1000)));
