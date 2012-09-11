@@ -37,6 +37,23 @@ class neighbors {
 	var $d;
 	var $title;
 	var $attr;
+    
+    /** get neighbour name and distance to in meters.
+     * \return string to insert in mediawiki
+     */
+    function formatNeighbour($nm, $d) {
+        $nm = $name;
+        if ($d >= 1000) {
+            $dist = round($d / 1000, 1);
+            $dist .= " километров";
+        } else {
+            $dist = round($d) . " метров";
+        }
+        
+        $kmch = 5 * 1000 / 60; # 5km/h -> m/min
+        $atime = round($d / $kmch) . " минут";                    
+        return "* [[$nm]] $dist, примерно $atime пешком";
+    }
 
 	function __construct( $dist )
 	{
@@ -178,17 +195,7 @@ class neighbors {
             foreach($titles as $title) {
                 $nm = $title->getEscapedText();
                 $d = $all[$title->getArticleID()];
-                if ($d >= 1000) {
-                    $dist = round($d / 1000, 1);
-                    $dist .= " километров";
-                } else {
-                    $dist = round($d) . " метров";
-                }
-                
-                $kmch = 5 * 1000 / 60; # 5km/h -> m/min
-                $atime = round($d / $kmch) . " минут";                    
-                 
-                array_push($titledivs, "* [[$nm]] - $dist, примерно $atime пешком");
+                array_push($titledivs, formatNeigbour($nm, $d)); 
             }
             asort($titledivs, SORT_STRING);
             reset($titledivs);
@@ -199,7 +206,15 @@ class neighbors {
                 array_push($catdivs, "$cn\n\n$titlevals");
             } 
         }
-        $out .= implode("\n\n", array_map(function($a) {return "[[$a]]";}, $nocategory));
+        
+        $nocatdivs = array();
+        foreach($nocategory as $title) {
+            $nm = $title->getEscapedText();
+            $d = $all[$title->getArticleID()];
+            array_push($nocatdivs, formatNeigbour($nm, $d));
+        }
+        
+        $out .= implode("\n\n", $nocatdivs);
         $out .= "\n\n";
         $out .= implode("\n\n", $catdivs);
         $out .= "\n";
