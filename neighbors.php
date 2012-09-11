@@ -121,7 +121,7 @@ class neighbors {
 
         # Group all articles by categories
         
-        $categories = array(); # key is a category id, value is a list of titles
+        $categories = array(); # key is a category name, value is a list of titles
         $nocategory = array(); # titles witout category
         foreach($all as $id => $d) {
             $title = Title::newFromID($id);
@@ -129,16 +129,14 @@ class neighbors {
                 error_log("Error loading article with id $id");
             }  else {
                 $ctgs = $title->getParentCategories(); # get list of categories to which our title belongs
-                foreach($ctgs as $ca => $ignore) {
-                    $categ = Category::newFromName($ca);
-                    $catname = $categ->getName();
-                    if (!$catname) {
-                        array_push($nocategory, "[[$title]]");
-                    } else {
-                        if (array_key_exists($catname, $categories)) { # push title to category if there is some
-                            array_push($categories[$catname], $title);
+                if (empty($ctgs)) {
+                    array_push($nocategory, $title);
+                } else {
+                    foreach($ctgs as $ca => $ignore) {
+                        if (array_key_exists($ca, $categories)) { # push title to category if there is some
+                            array_push($categories[$ca], $title);
                         } else {
-                            $categories[$catname] = array($title);
+                            $categories[$ca] = array($title);
                         }
                     }
                 } 
@@ -153,6 +151,16 @@ class neighbors {
         foreach($categories as $cat => $titles) {
             $categories[$cat] = array_unique($titles);
             asort($categories[$cat]);
+        }
+
+        # remove ignoring categories        
+        $ignorecat = $wgRequest->getVal("ignorecat");
+        if (!empty($ignorecat)) {
+            $icats = explode(";", $ignorecat);
+            foreach($icats as $ign) {
+                $ic = trim($ign);
+                unset($categories[$ic]);                 
+            }
         }
         
         # sort by categories 
