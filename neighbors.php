@@ -87,7 +87,7 @@ class neighbors {
 				# ignore those points that are within the
 				# bounding rectangle, but not within the radius
 			} else {
-			    array_push($all, $id);
+                $all[$id] = $gc->distance;
                 # just collect the id's of the articles
 			}
 		}
@@ -97,13 +97,13 @@ class neighbors {
         global $wgRequest;
         $ignore = $wgRequest->getVal("ignore");
         if (! empty($ignore)) {
-            foreach($all as $delid => $articleid) {
+            foreach($all as $articleid => $d) {
                 $title = Title::newFromID($articleid);
                 if (empty($title)) {
                     error_log("Can not create title from id $articleid");
                 } else {
                     if ($title->getBaseText() == $ignore) {
-                        unset($all[$delid]);
+                        unset($all[$articleid]);
                     }
                 }
             }
@@ -123,7 +123,7 @@ class neighbors {
         
         $categories = array(); # key is a category id, value is a list of titles
         $nocategory = array(); # titles witout category
-        foreach($all as $id) {
+        foreach($all as $id => $d) {
             $title = Title::newFromID($id);
             if (is_null($title)) {
                 error_log("Error loading article with id $id");
@@ -169,11 +169,22 @@ class neighbors {
             $titledivs = array();      # list of formated titiles
             foreach($titles as $title) {
                 $nm = $title->getEscapedText();
-                array_push($titledivs, "* [[$nm]]");
+                $d = $all[$title->getArticleID()];
+                if ($d >= 1000) {
+                    $dist = round($d / 1000, 1);
+                    $dist .= " километров";
+                } else {
+                    $dist = round($d) . " метров";
+                }
+                
+                $kmch = 5 * 1000 / 60; # 5km/h -> m/min
+                $atime = round($d / $kmch) . " минут";                    
+                 
+                array_push($titledivs, "* [[$nm]] - $dist, примерно $atime пешком");
             }
             asort($titledivs, SORT_STRING);
             reset($titledivs);
-            $titlevals = implode("\n\n", $titledivs);
+            $titlevals = implode("\n", $titledivs);
             if (!$cat) {
                 array_push($catdivs, "$titlevals");
             } else {
