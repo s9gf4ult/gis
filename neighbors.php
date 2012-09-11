@@ -42,7 +42,6 @@ class neighbors {
      * \return string to insert in mediawiki
      */
     function formatNeighbour($nm, $d) {
-        $nm = $name;
         if ($d >= 1000) {
             $dist = round($d / 1000, 1);
             $dist .= " километров";
