@@ -195,7 +195,7 @@ class neighbors {
             foreach($titles as $title) {
                 $nm = $title->getEscapedText();
                 $d = $all[$title->getArticleID()];
-                array_push($titledivs, formatNeigbour($nm, $d)); 
+                array_push($titledivs, $this->formatNeighbour($nm, $d)); 
             }
             asort($titledivs, SORT_STRING);
             reset($titledivs);
@@ -211,7 +211,7 @@ class neighbors {
         foreach($nocategory as $title) {
             $nm = $title->getEscapedText();
             $d = $all[$title->getArticleID()];
-            array_push($nocatdivs, formatNeigbour($nm, $d));
+            array_push($nocatdivs, $this->formatNeighbour($nm, $d));
         }
         
         $out .= implode("\n\n", $nocatdivs);
