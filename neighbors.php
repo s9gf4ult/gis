@@ -199,8 +199,10 @@ class neighbors {
                 array_push($catdivs, "$cn\n\n$titlevals");
             } 
         }
-        $out .= implode("\n\n", $nocategory);
+        $out .= implode("\n\n", array_map(function($a) {return "[[$a]]";}, $nocategory));
+        $out .= "\n\n";
         $out .= implode("\n\n", $catdivs);
+        $out .= "\n";
         $out .= "__NOTOC__\n";
         return $out;
 	}
