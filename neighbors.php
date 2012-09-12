@@ -69,8 +69,16 @@ class neighbors {
 
 		/* No reason for robots to follow these links */
 		$wgOut->setRobotPolicy( 'noindex,nofollow' );
-
-		$wgOut->setPagetitle( "Neighbors" );
+        
+        global $wgRequest;
+        $ignore = $wgRequest->getVal("ignore");
+        if (empty($ignore)) {
+            $wgOut->setPagetitle( "Рядом находится" );
+        } else {
+            $wgOut->setPagetitle("$ignore: рядом расположены");
+        }
+            
+        
 
 		if (($e = $this->p->get_error()) != "") {
 			throw new FatalError( htmlspecialchars( $e ) );
@@ -126,14 +134,10 @@ class neighbors {
         }
         
         if (count($all) == 0) {
-            return "=== По близости нет объектов ===";
+            return "=== Поблизости нет объектов ===";
         }
         
-        if (! empty($ignore)) {
-            $out = "=== Объекты возле: $ignore ===\n";
-        } else {
-            $out = "";
-        }
+       $out = "";
 
         # Group all articles by categories
         
@@ -170,14 +174,10 @@ class neighbors {
             asort($categories[$cat]);
         }
 
-        # remove ignoring categories        
-        $ignorecat = $wgRequest->getVal("ignorecat");
-        if (!empty($ignorecat)) {
-            $icats = explode(";", $ignorecat);
-            foreach($icats as $ign) {
-                $ic = trim($ign);
-                unset($categories[$ic]);                 
-            }
+        # remove ignoring categories
+        global $wgGisNeighbourIgnoreCat;
+        foreach($wgGisNeighbourIgnoreCat as $v) {
+            unset($categories[$v]);
         }
         
         # sort by categories 
