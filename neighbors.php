@@ -184,7 +184,7 @@ class neighbors {
                 if (empty($ctgs)) {
                     array_push($nocategory, $title);
                 } else {
-                    array_merge_recursive($categorized, $title->getParentCategoryTree());
+                    $categorized = array_merge_recursive($categorized, $title->getParentCategoryTree());
                 }
             }
         }
@@ -194,7 +194,6 @@ class neighbors {
         reset($nocategory);
         
         # Generate output
-        $catree = Title::getParentCategoryTree($categorized);
         
         $nocatdivs = array();
         foreach($nocategory as $title) {
