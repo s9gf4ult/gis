@@ -149,6 +149,7 @@ class neighbors {
                     array_push($nocategory, $title);
                 } else {
                     foreach($ctgs as $ca => $ignore) {
+                        $ca = trim($ca);
                         if (array_key_exists($ca, $categories)) { # push title to category if there is some
                             array_push($categories[$ca], $title);
                         } else {
