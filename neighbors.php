@@ -69,21 +69,8 @@ class neighbors {
         } elseif (is_array($cattree)) {
             $out = array();
             foreach($cattree as $catname => $childs) {
-                $chstrings = array_filter($childs, function($a) {return is_string($a);});
-                asort($chstrings, SORT_STRING);
-                $charrays = array_filter($childs, function($a) {return is_array($a);});
-                asort($charrays, SORT_STRING);
-                $ch1 = array();
-                foreach($chstrings as $chstr) {
-                    array_push($ch1, $this->renderCategory($chstr, $distances, $prepostfix . "="));
-                }
-                $ch2 = array();
-                foreach($charrays as $charr) {
-                    array_push($ch2, $this->renderCategory($charr, $distances, $prepostfix . "="));
-                }
                 array_push($out, "$prepostfix $catname $prepostfix");
-                array_push($out, implode("\n\n", $ch1));
-                array_push($out, implode("\n\n", $ch2)); 
+                array_push($out, $this->renderCategory($childs, $distances, $prepostfix . "="));
             }
             return implode("\n\n", $out);
         } else {
