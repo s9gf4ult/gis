@@ -184,7 +184,17 @@ class neighbors {
                 if (empty($ctgs)) {
                     array_push($nocategory, $title);
                 } else {
-                    $categorized = array_merge_recursive($categorized, $title->getParentCategoryTree());
+                    $tname = $title->getText();
+                    $catree = $title->getParentCategoryTree();
+                    array_walk_recursive($catree, function(&$a) {
+                        if(count($a) == 1) {
+                            $ks = array_keys($a);
+                            if (empty($a[$ks[0]])) { # suppose this is the most nested array
+                                $a[$ks[0]] = $tname;
+                            }
+                        }
+                    });
+                    $categorized = array_merge_recursive($categorized, $catree);
                 }
             }
         }
