@@ -186,7 +186,7 @@ class neighbors {
                 if (empty($ctgs)) {
                     array_push($nocategory, $title);
                 } else {
-                    $tname = $title->getText();
+                    $tname = $title->getEscapedText();
                     $catree = $title->getParentCategoryTree();
                     array_walk_recursive($catree, function(&$a) {
                         if(count($a) == 1) {
