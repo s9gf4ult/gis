@@ -92,6 +92,34 @@ class neighbors {
         }
     }
 
+    /** add $val to most nested array as value
+     * \param $arr Array() to search in
+     * \param $val
+     * \return new array with inserted  
+     */
+    function addToLeafs($arr, $val) {
+        if (is_array($arr)) {
+            if (count($arr) == 1) {
+                $ks = array_keys($arr);
+                if (empty($arr[$ks[0]])) {
+                    $arr[$ks[0]] = $val;
+                    return $arr;
+                }
+            }
+            $out = Array();
+            foreach($arr as $k => $v) {
+                if (is_array($v)) {
+                    $out[$k] = $this->addToLeafs($v, $val);
+                } else {
+                    $out[$k] = $val;
+                }
+            } 
+            return $out;
+        } else {
+            return $arr;
+        }     
+    }
+
 	function __construct( $dist )
 	{
 		$this->p = new GeoParam();
@@ -188,14 +216,7 @@ class neighbors {
                 } else {
                     $tname = $title->getEscapedText();
                     $catree = $title->getParentCategoryTree();
-                    array_walk_recursive($catree, function(&$a) {
-                        if(count($a) == 1) {
-                            $ks = array_keys($a);
-                            if (empty($a[$ks[0]])) { # suppose this is the most nested array
-                                $a[$ks[0]] = $tname;
-                            }
-                        }
-                    });
+                    $catree = $this->addToLeafs($catree, $tname);
                     $categorized = array_merge_recursive($categorized, $catree);
                 }
             }
