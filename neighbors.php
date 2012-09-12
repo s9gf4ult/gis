@@ -162,7 +162,7 @@ class neighbors {
         }
         
         if (count($all) == 0) {
-            return "=== По близости нет объектов ===";
+            return "=== Поблизости нет объектов ===";
         }
         
         if (! empty($ignore)) {
@@ -184,7 +184,7 @@ class neighbors {
                 if (empty($ctgs)) {
                     array_push($nocategory, $title);
                 } else {
-                    $categorized[$title->getText()] = ""; 
+                    array_merge_recursive($categorized, $title->getParentCategoryTree());
                 }
             }
         }
@@ -205,7 +205,7 @@ class neighbors {
         
         $out .= implode("\n\n", $nocatdivs);
         $out .= "\n\n";
-        $out .= $this->renderCategory($catree, $all, "===");
+        $out .= $this->renderCategory($categorized, $all, "===");
         $out .= "\n";
         $out .= "__NOTOC__\n";
         return $out;
