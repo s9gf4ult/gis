@@ -173,7 +173,7 @@ class neighbors {
 
         # Group all articles by categories
         
-        $categories = array(); # key is a category name, value is a list of titles
+        $categorized = array(); # key is a category name, value is a list of titles
         $nocategory = array(); # titles witout category
         foreach($all as $id => $d) {
             $title = Title::newFromID($id);
@@ -184,15 +184,8 @@ class neighbors {
                 if (empty($ctgs)) {
                     array_push($nocategory, $title);
                 } else {
-                    foreach($ctgs as $ca => $ignore) {
-                        $ca = trim($ca);
-                        if (array_key_exists($ca, $categories)) { # push title to category if there is some
-                            array_push($categories[$ca], $title);
-                        } else {
-                            $categories[$ca] = array($title);
-                        }
-                    }
-                } 
+                    $categorized[$title->getText()] = ""; 
+                }
             }
         }
         # remove duplicates from non categorized titles and sort 
@@ -200,38 +193,8 @@ class neighbors {
         asort($nocategory, SORT_STRING);
         reset($nocategory);
         
-        # sort titles and remove duplicates from categories
-        foreach($categories as $cat => $titles) {
-            $categories[$cat] = array_unique($titles);
-            asort($categories[$cat]);
-        }
-
-        # sort by categories 
-        ksort($categories);
-        
         # Generate output
-        
-        $catdivs = array(); # must be placed into <dl> tag
-        foreach($categories as $catname => $titles) {
-            $cat = Category::newFromName($catname);
-            $cn = $cat->getTitle()->getText();
-            $cn = str_replace(":", ": ", $cn);
-            $cn = "===$cn===";
-            $titledivs = array();      # list of formated titiles
-            foreach($titles as $title) {
-                $nm = $title->getEscapedText();
-                $d = $all[$title->getArticleID()];
-                array_push($titledivs, $this->formatNeighbour($nm, $d)); 
-            }
-            asort($titledivs, SORT_STRING);
-            reset($titledivs);
-            $titlevals = implode("\n", $titledivs);
-            if (!$cat) {
-                array_push($catdivs, "$titlevals");
-            } else {
-                array_push($catdivs, "$cn\n\n$titlevals");
-            } 
-        }
+        $catree = Title::getParentCategoryTree($categorized);
         
         $nocatdivs = array();
         foreach($nocategory as $title) {
@@ -242,7 +205,7 @@ class neighbors {
         
         $out .= implode("\n\n", $nocatdivs);
         $out .= "\n\n";
-        $out .= implode("\n\n", $catdivs);
+        $out .= $this->renderCategory($catree, $all, "===");
         $out .= "\n";
         $out .= "__NOTOC__\n";
         return $out;
