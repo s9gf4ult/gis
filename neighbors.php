@@ -53,6 +53,29 @@ class neighbors {
         $atime = round($d / $kmch) . " минут";                    
         return "* [[$nm]] $dist, примерно $atime пешком";
     }
+    
+    /** sort $names by distances
+     * \param $names - array of Title instances
+     * \param $dists - array of ArticleID => Distance
+     * \return sorted array of Titile
+     */
+    function sortByDistance($names, $dists) {
+        $a2title = Array(); # ArticleId => Title 
+        foreach($names as $t) {
+            $x = $t->getArticleID();
+            $a2title[$x] = $t;
+        }
+        
+        $c = array_intersect_key($dists, $a2title); # ArticleID => Distance
+        asort($c, SORT_NUMERIC); # ArticleID => Distance sorted by distance
+        $akeys = array_keys($c);  # sorted articleID
+        $ret = Array();
+        foreach($akeys as $ak) {
+            array_push($ret, $a2title[$ak]);
+        }
+		
+        return $ret; # Array($names[0]);
+    }
 
 	function __construct( $dist )
 	{
@@ -99,7 +122,7 @@ class neighbors {
 				     $this->attr['globe'], $this->attr['type'],
 				     // FIXME: Notice: Undefined index:  arg:type in extensions\gis\neighbors.php on line 81
 				     $this->attr['arg:type'] );
-		$all = array();
+		$all = array(); # key is article id, value is distance
 
 		while ( ( $x = $g->fetch_position() ) ) {
 			$id = $x->gis_page;
@@ -167,21 +190,19 @@ class neighbors {
         $nocategory = array_unique($nocategory);
         asort($nocategory, SORT_STRING);
         reset($nocategory);
-        
-        # sort titles and remove duplicates from categories
-        foreach($categories as $cat => $titles) {
-            $categories[$cat] = array_unique($titles);
-            asort($categories[$cat]);
-        }
-
-        # remove ignoring categories
+		
+		# remove ignoring categories
         global $wgGisNeighbourIgnoreCat;
         foreach($wgGisNeighbourIgnoreCat as $v) {
             unset($categories[$v]);
         }
         
-        # sort by categories 
-        ksort($categories);
+        # sort titles and remove duplicates from categories
+        foreach($categories as $cat => &$titles) {
+            $x = array_unique($titles);
+            $titles = $this->sortByDistance($x, $all);
+        }
+        unset($titles);
         
         # Generate output
         
@@ -197,8 +218,6 @@ class neighbors {
                 $d = $all[$title->getArticleID()];
                 array_push($titledivs, $this->formatNeighbour($nm, $d)); 
             }
-            asort($titledivs, SORT_STRING);
-            reset($titledivs);
             $titlevals = implode("\n", $titledivs);
             if (!$cat) {
                 array_push($catdivs, "$titlevals");
