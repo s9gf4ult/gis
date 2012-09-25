@@ -53,6 +53,11 @@ class neighbors {
         $atime = round($d / $kmch) . " минут";                    
         return "* [[$nm]] $dist, примерно $atime пешком";
     }
+	
+	function formatMapLink($lat, $lon, $plat, $plon, $name = "карта") {
+		global $wgServer;
+		return "[[$wgServer/Special:YaMap?action=path&lat=$lat&lon=$lon&plat=$plat&plon=$plon | $name]]";
+	}
     
     /** sort $names by distances
      * \param $names - array of Title instances
@@ -123,7 +128,8 @@ class neighbors {
 				     // FIXME: Notice: Undefined index:  arg:type in extensions\gis\neighbors.php on line 81
 				     $this->attr['arg:type'] );
 		$all = array(); # key is article id, value is distance
-
+		$latitude = array();
+		$longitude = array();
 		while ( ( $x = $g->fetch_position() ) ) {
 			$id = $x->gis_page;
 			$lat = ($x->gis_latitude_min+$x->gis_latitude_max)/2;
@@ -135,6 +141,8 @@ class neighbors {
 				# bounding rectangle, but not within the radius
 			} else {
                 $all[$id] = $gc->distance;
+				$latitude[$id] = $lat;
+				$longitude[$id] = $lon;
                 # just collect the id's of the articles
 			}
 		}
@@ -206,6 +214,8 @@ class neighbors {
         
         # Generate output
         
+       
+        
         $catdivs = array(); # must be placed into <dl> tag
         foreach($categories as $catname => $titles) {
             $cat = Category::newFromName($catname);
@@ -215,8 +225,10 @@ class neighbors {
             $titledivs = array();      # list of formated titiles
             foreach($titles as $title) {
                 $nm = $title->getEscapedText();
-                $d = $all[$title->getArticleID()];
-                array_push($titledivs, $this->formatNeighbour($nm, $d)); 
+				$id = $title->getArticleID();
+                $d = $all[$id];
+                array_push($titledivs, $this->formatNeighbour($nm, $d) . " " .
+                $this->formatMapLink($lat0, $lon0, $latitude[$id], $longitude[$id]));
             }
             $titlevals = implode("\n", $titledivs);
             if (!$cat) {
