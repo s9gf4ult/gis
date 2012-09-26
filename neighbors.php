@@ -54,9 +54,15 @@ class neighbors {
         return "* [[$nm]] $dist, примерно $atime пешком";
     }
 	
-	function formatMapLink($lat, $lon, $plat, $plon, $name = "карта") {
+	function formatMapLink($lat, $lon, $plat, $plon, $t= "", $name = "карта") {
 		global $wgServer;
-		return "[[$wgServer/Special:YaMap?action=path&lat=$lat&lon=$lon&plat=$plat&plon=$plon | $name]]";
+		if ($t != "") {
+			$tt=Title::escapeFragmentForURL($t);
+			$target="&target=$tt";
+		} else {
+			$target="";
+		}
+		return "[$wgServer/Special:YaMap?action=path&lat=$lat&lon=$lon&plat=$plat&plon=$plon$target $name]";
 	}
     
     /** sort $names by distances
