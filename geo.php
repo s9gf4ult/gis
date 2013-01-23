@@ -103,8 +103,9 @@ function articleSaveGeo ( $article, $user, $text )
 		$g->add_position( $id,
 				   $p->latdeg_min, $p->londeg_min,
 				   $p->latdeg_max, $p->londeg_max,
-				   $attr['globe'],
-				   $attr['type'], $attr['arg:type'] );
+				   array_key_exists('globe', $attr) ? $attr['globe'] : '',
+				   array_key_exists('globe', $attr) ? $attr['type'] : '',
+				   array_key_exists('globe', $attr) ? $attr['arg:type'] : '');
 	}
 	return true;
 }
