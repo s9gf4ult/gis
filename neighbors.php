@@ -88,9 +88,13 @@ class neighbors {
         return $ret; # Array($names[0]);
     }
 
-	function __construct( $dist )
+	function __construct( $dist, $geoparam = NULL )
 	{
-		$this->p = new GeoParam();
+	    if ($geoparam) {
+	        $this->p = $geoparam;
+        } else {
+		    $this->p = new GeoParam();
+		}
 		$this->d = $dist;
 		if ($this->d <= 0) $this->d = 1000; /* default to 1000 km */
 		$this->title = $this->p->title;
@@ -120,41 +124,36 @@ class neighbors {
 
 		$wgOut->addWikiText( $this->make_output() );
 	}
+    
+    function get_nearest() {
+        $lat0 = $this->p->latdeg;
+        $lon0 = $this->p->londeg;
 
-	function make_output()
-	{
-		$lat0 = $this->p->latdeg;
-		$lon0 = $this->p->londeg;
-
-		$g = new GisDatabase();
-		$g->select_radius_m( $lat0, $lon0, $this->d * 1000,
-				     // FIXME: Notice: Undefined index:  globe in extensions\gis\neighbors.php on line 79
-				     // FIXME: Notice: Undefined index:  type in extensions\gis\neighbors.php on line 79
-				     $this->attr['globe'], $this->attr['type'],
-				     // FIXME: Notice: Undefined index:  arg:type in extensions\gis\neighbors.php on line 81
-				     $this->attr['arg:type'] );
-		$all = array(); # key is article id, value is distance
-		$latitude = array();
-		$longitude = array();
-		while ( ( $x = $g->fetch_position() ) ) {
-			$id = $x->gis_page;
-			$lat = ($x->gis_latitude_min+$x->gis_latitude_max)/2;
-			$lon = ($x->gis_longitude_min+$x->gis_longitude_max)/2;
-			$gc = new greatcircle($lat,$lon, $lat0, $lon0);
-			# FIXME: multiple geos in same page are overwritten
-			if ($gc->distance > $this->d * 1000) {
-				# ignore those points that are within the
-				# bounding rectangle, but not within the radius
-			} else {
+        $g = new GisDatabase();
+        $g->select_radius_m( $lat0, $lon0, $this->d * 1000,
+                     array_key_exists('globe', $this->attr) ? $this->attr['globe'] : '', 
+                     array_key_exists('type', $this->attr) ? $this->attr['type'] : '',
+                     array_key_exists('arg:type', $this->attr) ? $this->attr['arg:type'] : '');
+        $all = array(); # key is article id, value is distance
+        $latitude = array();
+        $longitude = array();
+        while ( ( $x = $g->fetch_position() ) ) {
+            $id = $x->gis_page;
+            $lat = ($x->gis_latitude_min+$x->gis_latitude_max)/2;
+            $lon = ($x->gis_longitude_min+$x->gis_longitude_max)/2;
+            $gc = new greatcircle($lat,$lon, $lat0, $lon0);
+            # FIXME: multiple geos in same page are overwritten
+            if ($gc->distance > $this->d * 1000) {
+                # ignore those points that are within the
+                # bounding rectangle, but not within the radius
+            } else {
                 $all[$id] = $gc->distance;
-				$latitude[$id] = $lat;
-				$longitude[$id] = $lon;
+                $latitude[$id] = $lat;
+                $longitude[$id] = $lon;
                 # just collect the id's of the articles
-			}
-		}
-
-        # Delete ignoring articles            
-            
+            }
+        }
+        
         global $wgRequest;
         $ignore = $wgRequest->getVal("ignore");
         if (! empty($ignore)) {
@@ -169,6 +168,25 @@ class neighbors {
                 }
             }
         }
+        
+        
+        return array($all, $latitude, $longitude);    
+        
+    }
+
+	function make_output()
+	{
+		$lat0 = $this->p->latdeg;
+		$lon0 = $this->p->londeg;
+        
+        
+        
+        $a = $this->get_nearest();
+        $all = $a[0];
+        $latitude=$a[1];
+        $longitude=$a[2];
+        # Delete ignoring articles            
+            
         
         if (count($all) == 0) {
             return "=== Поблизости нет объектов ===";

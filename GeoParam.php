@@ -125,6 +125,62 @@ class GeoParam {
 
 
 	}
+    
+    /** Fill params from the database record assigned to current page if any
+     */
+    function fillFromTitle() {
+        global $wgTitle;
+        $id = $wgTitle->getDBkey();
+        $gisdb = new GisDatabase();
+        $gisdb->select_position('page_title = ' . "'" . $id . "'");
+        $pos = $gisdb->fetch_position();
+        if (!empty($pos)) {
+            $latmin = $this->toDeg($pos->gis_latitude_min);
+            $latmax = $this->toDeg($pos->gis_latitude_max);
+            $lonmin = $this->toDeg($pos->gis_longitude_min);
+            $lonmax = $this->toDeg($pos->gis_longitude_max);
+            $this->coor = array(
+                'latdeg' => ($latmin[0]+$latmax[0]) / 2,
+                'latmin' => ($latmin[1]+$latmax[1]) / 2,
+                'latsec' => ($latmin[2]+$latmax[2]) / 2,
+                'londeg' => ($lonmin[0]+$lonmax[0]) / 2,
+                'lonmin' => ($lonmin[1]+$lonmax[1]) / 2,
+                'lonsec' => ($lonmin[2]+$lonmax[2]) / 2,
+                'latns' => $pos->gis_latitude_min > 0 ? 'N' : 'S',
+                'lonew' => $pos->gis_longitude_min > 0 ? 'E' : 'W' 
+            );
+            $this->title=$wgTitle;
+            $this->latdeg_min = $pos->gis_latitude_min;
+            $this->latdeg_max = $pos->gis_latitude_max;
+            $this->londeg_min = $pos->gis_longitude_min;
+            $this->londeg_max = $pos->gis_longitude_max;
+            $this->latdeg = ($this->latdeg_max + $this->latdeg_min) / 2;
+            $this->londeg = ($this->londeg_max + $this->londeg_min) / 2;
+            // $this->updateInternal();
+        }
+    }
+
+    function getLinkToSpecialGeo() {
+        global $wgServer;
+        
+        return $wgServer . '/Special:Geo?' . http_build_query(array_merge($this->coor, array(
+                                                                                  'dist' => '0.5',
+                                                                                  'subaction' => 'near'
+                                                                                   )));
+        
+    }
+    
+    
+    /** Convert float value to array (Degree, Minute, Second)
+     */
+    function toDeg($val) {
+        $val = abs($val);
+        $deg = floor($val);
+        $dres = 60 * ($val - $deg);
+        $min = floor($dres);
+        $secs = 60 * ($dres - $min);
+        return array($deg, $min, $secs);
+    }
 
 	/**
 	 *  Private:
